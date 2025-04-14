@@ -22,7 +22,11 @@ secrets:
 
 [![部署到 Hugging Face Spaces](https://huggingface.co/datasets/huggingface/badges/resolve/main/deploy-to-spaces-lg.svg)](https://huggingface.co/spaces/malt666/Tavern-Docker?duplicate=true)
 
-点击按钮后，系统会帮你复制一份完整的项目配置，你只需要按照提示设置 Secrets（主要是修改 CONFIG_YAML 中的用户名和密码），即可完成部署。这是最适合新手的快捷部署方式。
+点击按钮后，按照下面的格式配置环境变量即可：
+
+PLUGINS：https://github.com/fuwei99/cloud-saves.git
+
+CONFIG_YAML：见下方命令行复制，记得改用户名和密码
 
 ---
 
