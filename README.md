@@ -26,7 +26,7 @@ secrets:
 
 PLUGINS：https://github.com/fuwei99/cloud-saves.git
 
-CONFIG_YAML：见下方命令行复制，记得改用户名和密码
+CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由于hugging face的duplicate(部署)界面有bug，复制下来的也会变成一行，所以只能进入界面之后，在setting下面找到secrets，点击CONFIG_YAML旁边的replace，重新复制粘贴一遍到value那里，这样应该就可以了。
 
 ---
 
