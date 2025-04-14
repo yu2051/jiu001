@@ -16,7 +16,15 @@ secrets:
     required: false # 插件是可选的
 ---
 
-[![Deploy to Spaces](https://huggingface.co/widgets/button.svg)](https://huggingface.co/new/docker?template=malt666/Tavern-Docker)
+# 最简单的方法：一键部署
+
+如果你不想手动配置，可以直接点击下方按钮，一键将 SillyTavern Docker 部署到你自己的 Hugging Face Space 中（需要先注册 Hugging Face 账号）：
+
+[![部署到 Hugging Face Spaces](https://huggingface.co/datasets/huggingface/badges/resolve/main/deploy-to-spaces-lg.svg)](https://huggingface.co/spaces/malt666/Tavern-Docker)
+
+点击按钮后，系统会帮你复制一份完整的项目配置，你只需要按照提示设置 Secrets（主要是修改 CONFIG_YAML 中的用户名和密码），即可完成部署。这是最适合新手的快捷部署方式。
+
+---
 
 # SillyTavern Docker 与 Hugging Face 部署指南
 
