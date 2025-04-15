@@ -120,7 +120,7 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
           lazyLoadCharacters: false
           memoryCacheCapacity: '100mb'
           useDiskCache: true
-        allowKeysExposure: false
+        allowKeysExposure: true
         skipContentCheck: false
         whitelistImportDomains:
           - localhost
