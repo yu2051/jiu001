@@ -131,7 +131,7 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
         requestOverrides: []
         extensions:
           enabled: true
-          autoUpdate: true
+          autoUpdate: false
           models:
             autoDownload: true
             classification: Cohee/distilbert-base-uncased-go-emotions-onnx
