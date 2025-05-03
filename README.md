@@ -17,6 +17,7 @@ secrets:
 ---
 
 # 最简单的方法：一键部署
+## 注意部署界面那个visibility一定要改为public，不然没办法用
 
 如果你不想手动配置，可以直接点击下方按钮，一键将 SillyTavern Docker 部署到你自己的 Hugging Face Space 中（需要先注册 Hugging Face 账号）：
 
