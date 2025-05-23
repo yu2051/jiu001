@@ -34,7 +34,8 @@ secrets:
 PLUGINS：https://github.com/fuwei99/cloud-saves.git
 （填写云备份插件链接）
 
-EXTENSIONS：https://github.com/N0VI028/JS-Slash-Runner,https://github.com/user2/extension2.git（填写扩展链接，比如云酒馆，用英语逗号隔开）
+EXTENSIONS：https://github.com/N0VI028/JS-Slash-Runner,https://github.com/user2/extension2.git
+（填写扩展链接，比如酒馆助手，用英语逗号隔开）
 
 INSTALL_FOR_ALL_USERS：false
 （设置为false会安装到default-user，设置为true会安装到全局，不填写默认安装到default-user，推荐设置为false）
