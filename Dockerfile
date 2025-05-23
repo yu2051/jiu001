@@ -167,7 +167,7 @@ ENTRYPOINT ["tini", "--", "sh", "-c", " \
       echo \"*** Auto-configuring cloud-saves plugin with provided secrets ***\" && \
       config_file=\"./plugins/cloud-saves/config.json\" && \
       echo \"--- Creating config.json for cloud-saves plugin at $config_file ---\" && \
-      printf '{\\n  \"repo_url\": \"%s\",\\n  \"branch\": \"main\",\\n  \"username\": \"\",\\n  \"github_token\": \"%s\",\\n  \"display_name\": \"user\",\\n  \"is_authorized\": true,\\n  \"last_save\": null,\\n  \"current_save\": null,\\n  \"has_temp_stash\": false,\\n  \"autoSaveEnabled\": true,\\n  \"autoSaveInterval\": %s,\\n  \"autoSaveTargetTag\": \"%s\"\\n}\\n' \"$REPO_URL\" \"$GITHUB_TOKEN\" \"${AUTOSAVE_INTERVAL:-30}\" \"${AUTOSAVE_TARGET_TAG:-}\" > \"$config_file\" && \
+      printf '{\\n  \"repo_url\": \"%s\",\\n  \"branch\": \"main\",\\n  \"username\": \"\",\\n  \"github_token\": \"%s\",\\n  \"display_name\": \"user\",\\n  \"is_authorized\": true,\\n  \"last_save\": null,\\n  \"current_save\": null,\\n  \"has_temp_stash\": false,\\n  \"autoSaveEnabled\": false,\\n  \"autoSaveInterval\": %s,\\n  \"autoSaveTargetTag\": \"%s\"\\n}\\n' \"$REPO_URL\" \"$GITHUB_TOKEN\" \"${AUTOSAVE_INTERVAL:-30}\" \"${AUTOSAVE_TARGET_TAG:-}\" > \"$config_file\" && \
       chown node:node \"$config_file\" && \
       echo \"*** cloud-saves plugin auto-configuration completed ***\"; \
     else \
