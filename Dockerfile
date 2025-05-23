@@ -250,6 +250,7 @@ ENTRYPOINT ["tini", "--", "sh", "-c", " \
     fi; \
     # --- END: Cleanup before start --- \
 
-    # Execute node server directly, bypassing docker-entrypoint.sh
-    exec node server.js; \
+    # --- BEGIN: Generate and run health check script ---\\n    echo '--- Generating health.sh script ---';\\n    cat << EOF > health.sh\\n#!/bin/sh\\n\\nwhile true; do\\n  echo \"--- Running health check: curl http://localhost:8000/ ---\"\\n  curl http://localhost:8000/ > /dev/null 2>&1\\n  echo \"--- Health check finished, sleeping for 30 minutes ---\"\\n  sleep 1800\\ndone\\nEOF\\n    chmod +x health.sh && chown node:node health.sh && echo 'health.sh generated and permissions set.';\\n    echo '--- Running health.sh in background ---';\\n    ./health.sh &\\n    # --- END: Generate and run health check script ---\\
+
+    # Execute node server directly, bypassing docker-entrypoint.sh\\n    exec node server.js; \\
   "]
