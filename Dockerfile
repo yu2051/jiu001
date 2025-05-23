@@ -161,6 +161,54 @@ ENTRYPOINT ["tini", "--", "sh", "-c", " \
     fi; \
     # --- END: Dynamically Install Plugins at Runtime --- \
 
+    # --- BEGIN: Dynamically Install Extensions at Runtime --- \
+    echo '--- Checking for EXTENSIONS environment variable ---'; \
+    if [ -n \"$EXTENSIONS\" ]; then \
+      echo \"*** Installing Extensions specified in EXTENSIONS environment variable: $EXTENSIONS ***\" && \
+      # Determine extension installation directory based on INSTALL_FOR_ALL_USERS
+      if [ \"$INSTALL_FOR_ALL_USERS\" = \"true\" ]; then \
+        ext_install_dir=\"./public/scripts/extensions/third-party\" && \
+        echo \"--- Installing extensions for all users (system-wide) to $ext_install_dir ---\"; \
+      else \
+        ext_install_dir=\"./data/default-user/extensions\" && \
+        echo \"--- Installing extensions for default user only to $ext_install_dir ---\"; \
+      fi && \
+      # Ensure extension directory exists
+      mkdir -p \"$ext_install_dir\" && chown node:node \"$ext_install_dir\" && \
+      # Set comma as delimiter
+      IFS=',' && \
+      # Loop through each extension URL
+      for ext_url in $EXTENSIONS; do \
+        # Trim leading/trailing whitespace
+        ext_url=$(echo \"$ext_url\" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//') && \
+        if [ -z \"$ext_url\" ]; then continue; fi && \
+        # Extract extension name
+        ext_name_git=$(basename \"$ext_url\") && \
+        ext_name=${ext_name_git%.git} && \
+        ext_dir=\"$ext_install_dir/$ext_name\" && \
+        echo \"--- Installing extension: $ext_name from $ext_url into $ext_dir ---\" && \
+        # Remove existing dir if it exists
+        rm -rf \"$ext_dir\" && \
+        # Clone the extension (run as root, fix perms later)
+        git clone --depth 1 \"$ext_url\" \"$ext_dir\" && \
+        if [ -f \"$ext_dir/package.json\" ]; then \
+          echo \"--- Installing dependencies for extension $ext_name ---\" && \
+          (cd \"$ext_dir\" && npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev --force && npm cache clean --force) || echo \"WARN: Failed to install dependencies for extension $ext_name\"; \
+        else \
+           echo \"--- No package.json found for extension $ext_name, skipping dependency install. ---\"; \
+        fi || echo \"WARN: Failed to clone extension $ext_name from $ext_url, skipping...\"; \
+      done && \
+      # Reset IFS
+      unset IFS && \
+      # Fix permissions for extensions directory after installation
+      echo \"--- Setting permissions for extensions directory ---\" && \
+      chown -R node:node \"$ext_install_dir\" && \
+      echo \"*** Extension installation finished. ***\"; \
+    else \
+      echo 'EXTENSIONS environment variable is not set or empty, skipping runtime extension installation.'; \
+    fi; \
+    # --- END: Dynamically Install Extensions at Runtime --- \
+
     echo 'Starting SillyTavern server directly...'; \
 
     # --- BEGIN: Cleanup before start --- \

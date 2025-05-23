@@ -14,6 +14,12 @@ secrets:
   - name: PLUGINS
     description: "要安装的插件Git URL列表（逗号分隔）"
     required: false # 插件是可选的
+  - name: EXTENSIONS
+    description: "要安装的扩展Git URL列表（逗号分隔）"
+    required: false # 扩展是可选的
+  - name: INSTALL_FOR_ALL_USERS
+    description: "扩展安装模式：true为系统级安装，false或其他值为用户级安装"
+    required: false # 扩展安装模式是可选的
 ---
 
 # 最简单的方法：一键部署
@@ -26,6 +32,13 @@ secrets:
 点击按钮后，按照下面的格式配置环境变量即可：
 
 PLUGINS：https://github.com/fuwei99/cloud-saves.git
+（填写云备份插件链接）
+
+EXTENSIONS：https://github.com/N0VI028/JS-Slash-Runner,https://github.com/user2/extension2.git（填写扩展链接，比如云酒馆，用英语逗号隔开）
+
+INSTALL_FOR_ALL_USERS：false
+（设置为false会安装到default-user，设置为true会安装到全局，不填写默认安装到default-user，推荐设置为false）
+
 
 CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由于hugging face的duplicate(部署)界面有bug，复制下来的也会变成一行，所以只能进入界面之后，在setting下面找到secrets，点击CONFIG_YAML旁边的replace，重新复制粘贴一遍到value那里，这样应该就可以了。
 
@@ -169,6 +182,21 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
     *   **格式示例**: `https://github.com/fuwei99/cloud-saves.git` (注意包含推荐的 cloud-saves 插件)
     *   **注意**: URL 之间**只能用英文逗号 `,` 分隔**，且逗号前后**不能有空格**。如果留空或不提供此变量，则不会安装额外插件。
 
+3.  `EXTENSIONS`: **可选**。
+    *   **作用**: 指定需要在容器启动时自动安装的 SillyTavern 扩展（Extensions）。
+    *   **内容**: 一个**逗号分隔**的扩展 Git 仓库 URL 列表。
+    *   **安装时机**: 扩展会在项目启动之后自动安装，确保 SillyTavern 目录结构已经准备完毕。
+    *   **格式示例**: `https://github.com/user1/extension1.git,https://github.com/user2/extension2.git`
+    *   **注意**: URL 之间**只能用英文逗号 `,` 分隔**，且逗号前后**不能有空格**。如果留空或不提供此变量，则不会安装额外扩展。
+
+4.  `INSTALL_FOR_ALL_USERS`: **可选**。
+    *   **作用**: 控制扩展的安装位置模式。
+    *   **可选值**:
+        *   `true`: 扩展安装到 `public/scripts/extensions/third-party` 目录下，对**所有用户**生效（系统级安装）。
+        *   `false` 或任何其他值，或变量不存在: 扩展安装到 `data/default-user/extensions` 目录下，仅对**默认用户**生效（用户级安装）。
+    *   **默认行为**: 如果不设置此环境变量，默认安装到用户级目录。
+    *   **格式示例**: `true` 或 `false`
+
 ## 方法一：本地 Docker 部署
 
 你可以在本地使用 Docker 来构建和运行 SillyTavern。
@@ -193,6 +221,8 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
     docker run -p 8000:8000 --name my-sillytavern \\
       -e CONFIG_YAML="$(cat config_no_comments.yaml)" \\
       -e PLUGINS='https://github.com/fuwei99/cloud-saves.git' \\
+      -e EXTENSIONS='https://github.com/user1/extension1.git,https://github.com/user2/extension2.git' \\
+      -e INSTALL_FOR_ALL_USERS=false \\
       sillytavern-local
 
     # 如果你需要安装更多插件，用逗号隔开添加到 PLUGINS 变量中
@@ -200,12 +230,16 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
     # docker run -p 8000:8000 --name my-sillytavern \
     #   -e CONFIG_YAML="$(cat config_no_comments.yaml)" \
     #   -e PLUGINS='https://github.com/fuwei99/cloud-saves.git,https://github.com/user/other-plugin.git' \
+    #   -e EXTENSIONS='https://github.com/user1/extension1.git,https://github.com/user2/extension2.git' \
+    #   -e INSTALL_FOR_ALL_USERS=false \
     #   sillytavern-local
     ```
     *   `-p 8000:8000`: 将容器的 8000 端口映射到宿主机的 8000 端口。
     *   `--name my-sillytavern`: 为容器命名，方便管理。
     *   `-e CONFIG_YAML="$(cat config_no_comments.yaml)"`: 从文件读取配置内容并传递。这是处理多行 YAML 最可靠的方式。**再次确认：运行前务必修改 `config_no_comments.yaml` 文件中的用户名和密码！**
     *   `-e PLUGINS='...'`: 传递插件列表，这里以安装 `cloud-saves` 为例。
+    *   `-e EXTENSIONS='...'`: 传递扩展列表，这里以安装 `extension1` 和 `extension2` 为例。
+    *   `-e INSTALL_FOR_ALL_USERS=false`: 设置扩展安装模式为用户级安装。
 
 4.  **访问**: 打开浏览器访问 `http://localhost:8000`。
 
@@ -229,6 +263,20 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
         *   值 (Value) 粘贴: 推荐至少包含 `cloud-saves` 插件。例如：`https://github.com/fuwei99/cloud-saves.git`。如果你需要其他插件，用逗号隔开添加，例如：`https://github.com/fuwei99/cloud-saves.git,https://github.com/user/other-plugin.git`。
         *   **重要提醒**: 请确保你已经在本地 SillyTavern 安装了 `cloud-saves` 并至少进行了一次存档。
         *   点击 "Add secret"。如果你确实不需要任何额外插件，可以跳过这一步。
+
+    *   **(可选) 添加 `EXTENSIONS` Secret**:
+        *   再次点击 "New secret"。
+        *   名称 (Name) 输入: `EXTENSIONS`
+        *   值 (Value) 粘贴: 你需要安装的扩展 Git URL 列表，用逗号隔开。例如：`https://github.com/user1/extension1.git,https://github.com/user2/extension2.git`。
+        *   点击 "Add secret"。如果你不需要安装扩展，可以跳过这一步。
+
+    *   **(可选) 添加 `INSTALL_FOR_ALL_USERS` Secret**:
+        *   如果你添加了 `EXTENSIONS` Secret，可以继续添加这个 Secret 来控制扩展安装模式。
+        *   再次点击 "New secret"。
+        *   名称 (Name) 输入: `INSTALL_FOR_ALL_USERS`
+        *   值 (Value) 输入: `true`（系统级安装，所有用户可用）或 `false`（用户级安装，仅默认用户可用）。
+        *   **推荐**: 对于 Hugging Face Space 单用户环境，建议设置为 `false` 或不设置此 Secret。
+        *   点击 "Add secret"。如果不设置，默认为用户级安装。
 
 4.  **构建与启动**: Hugging Face 会自动检测到 `Dockerfile` 和 Secrets，并开始构建镜像、启动容器。你可以在 Space 的 **Logs** 标签页查看构建和启动过程。
 
