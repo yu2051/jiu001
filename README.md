@@ -67,6 +67,16 @@ AUTOSAVE_INTERVAL：30（填写自动保存间隔秒数，不填写默认为30�
 AUTOSAVE_TARGET_TAG：auto-backup（填写自动保存目标标签，不填写默认为空）
 
 
+## 如何读取或者保存存档
+
+教程见： https://github.com/fuwei99/cloud-saves
+
+*   对于推荐安装的 `cloud-saves` 插件，其管理界面通常位于:
+    `http://<你的SillyTavern访问地址>/api/plugins/cloud-saves/ui`
+    例如，如果是本地部署，则为 `http://127.0.0.1:8000/api/plugins/cloud-saves/ui`。如果是 Hugging Face Space，则将 `<你的SillyTavern访问地址>` 替换为你的 Space 公共 URL
+
+其他插件的访问路径请参考其各自的文档。
+
 
 ---
 
