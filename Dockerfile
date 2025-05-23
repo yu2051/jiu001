@@ -161,6 +161,24 @@ ENTRYPOINT ["tini", "--", "sh", "-c", " \
     fi; \
     # --- END: Dynamically Install Plugins at Runtime --- \
 
+    # --- BEGIN: Auto-configure cloud-saves plugin if secrets provided --- \
+    echo '--- Checking for cloud-saves plugin auto-configuration ---'; \
+    if [ -d \"./plugins/cloud-saves\" ] && [ -n \"$REPO_URL\" ] && [ -n \"$GITHUB_TOKEN\" ]; then \
+      echo \"*** Auto-configuring cloud-saves plugin with provided secrets ***\" && \
+      config_file=\"./plugins/cloud-saves/config.json\" && \
+      echo \"--- Creating config.json for cloud-saves plugin at $config_file ---\" && \
+      printf '{\\n  \"repo_url\": \"%s\",\\n  \"branch\": \"main\",\\n  \"username\": \"\",\\n  \"github_token\": \"%s\",\\n  \"display_name\": \"user\",\\n  \"is_authorized\": true,\\n  \"last_save\": null,\\n  \"current_save\": null,\\n  \"has_temp_stash\": false,\\n  \"autoSaveEnabled\": true,\\n  \"autoSaveInterval\": %s,\\n  \"autoSaveTargetTag\": \"%s\"\\n}\\n' \"$REPO_URL\" \"$GITHUB_TOKEN\" \"${AUTOSAVE_INTERVAL:-30}\" \"${AUTOSAVE_TARGET_TAG:-}\" > \"$config_file\" && \
+      chown node:node \"$config_file\" && \
+      echo \"*** cloud-saves plugin auto-configuration completed ***\"; \
+    else \
+      if [ ! -d \"./plugins/cloud-saves\" ]; then \
+        echo 'cloud-saves plugin not found, skipping auto-configuration.'; \
+      elif [ -z \"$REPO_URL\" ] || [ -z \"$GITHUB_TOKEN\" ]; then \
+        echo 'REPO_URL or GITHUB_TOKEN environment variables not provided, skipping cloud-saves auto-configuration.'; \
+      fi; \
+    fi; \
+    # --- END: Auto-configure cloud-saves plugin --- \
+
     # --- BEGIN: Dynamically Install Extensions at Runtime --- \
     echo '--- Checking for EXTENSIONS environment variable ---'; \
     if [ -n \"$EXTENSIONS\" ]; then \

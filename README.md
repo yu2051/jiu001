@@ -20,6 +20,18 @@ secrets:
   - name: INSTALL_FOR_ALL_USERS
     description: "扩展安装模式：true为系统级安装，false或其他值为用户级安装"
     required: false # 扩展安装模式是可选的
+  - name: REPO_URL
+    description: "cloud-saves插件的GitHub仓库URL（用于自动配置）"
+    required: false # cloud-saves自动配置是可选的
+  - name: GITHUB_TOKEN
+    description: "GitHub访问令牌（用于cloud-saves插件自动配置）"
+    required: false # cloud-saves自动配置是可选的
+  - name: AUTOSAVE_INTERVAL
+    description: "cloud-saves插件自动保存间隔（秒）"
+    required: false # cloud-saves自动保存配置是可选的
+  - name: AUTOSAVE_TARGET_TAG
+    description: "cloud-saves插件自动保存目标标签"
+    required: false # cloud-saves自动保存配置是可选的
 ---
 
 # 最简单的方法：一键部署
@@ -34,12 +46,21 @@ secrets:
 PLUGINS：https://github.com/fuwei99/cloud-saves.git
 （填写云备份插件链接）
 
-EXTENSIONS：https://github.com/N0VI028/JS-Slash-Runner,https://github.com/user2/extension2.git
-（填写扩展链接，比如酒馆助手，用英语逗号隔开）
+EXTENSIONS：https://github.com/N0VI028/JS-Slash-Runner,https://github.com/user2/extension2.git（填写扩展链接，比如云酒馆，用英语逗号隔开）
 
 INSTALL_FOR_ALL_USERS：false
 （设置为false会安装到default-user，设置为true会安装到全局，不填写默认安装到default-user，推荐设置为false）
 
+
+以下是可选secret：
+
+REPO_URL：https://github.com/yourusername/yourrepo（填写你的 GitHub 仓库地址，用于 cloud-saves 插件自动配置）
+
+GITHUB_TOKEN：ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx（填写你的 GitHub 访问令牌，用于 cloud-saves 插件自动配置）
+
+AUTOSAVE_INTERVAL：30（填写自动保存间隔秒数，不填写默认为30秒）
+
+AUTOSAVE_TARGET_TAG：auto-backup（填写自动保存目标标签，不填写默认为空）
 
 CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由于hugging face的duplicate(部署)界面有bug，复制下来的也会变成一行，所以只能进入界面之后，在setting下面找到secrets，点击CONFIG_YAML旁边的replace，重新复制粘贴一遍到value那里，这样应该就可以了。
 
@@ -198,6 +219,31 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
     *   **默认行为**: 如果不设置此环境变量，默认安装到用户级目录。
     *   **格式示例**: `true` 或 `false`
 
+5.  `REPO_URL`: **可选**。
+    *   **作用**: 为 cloud-saves 插件提供 GitHub 仓库 URL，用于自动配置插件。
+    *   **前置条件**: 需要同时安装 cloud-saves 插件（通过 `PLUGINS` 环境变量）。
+    *   **格式示例**: `https://github.com/yourusername/yourrepo`
+    *   **说明**: 这是你用来存储 SillyTavern 数据备份的 GitHub 仓库地址。
+
+6.  `GITHUB_TOKEN`: **可选**。
+    *   **作用**: 为 cloud-saves 插件提供 GitHub 访问令牌，用于自动配置插件。
+    *   **前置条件**: 需要同时设置 `REPO_URL` 和安装 cloud-saves 插件。
+    *   **格式示例**: `ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+    *   **获取方式**: 在 GitHub Settings -> Developer settings -> Personal access tokens -> Tokens (classic) 中创建，需要 `repo` 权限。
+    *   **自动配置**: 如果同时提供了 `REPO_URL` 和 `GITHUB_TOKEN`，且安装了 cloud-saves 插件，系统会自动创建插件的配置文件。
+
+7.  `AUTOSAVE_INTERVAL`: **可选**。
+    *   **作用**: 设置 cloud-saves 插件的自动保存间隔时间（秒）。
+    *   **前置条件**: 需要同时设置 `REPO_URL` 和 `GITHUB_TOKEN`。
+    *   **格式示例**: `30`（表示每30秒自动保存一次）
+    *   **默认值**: 如果不设置，默认为 `30` 秒。
+
+8.  `AUTOSAVE_TARGET_TAG`: **可选**。
+    *   **作用**: 设置 cloud-saves 插件的自动保存目标标签。
+    *   **前置条件**: 需要同时设置 `REPO_URL` 和 `GITHUB_TOKEN`。
+    *   **格式示例**: `auto-backup` 或 `daily-save`
+    *   **默认值**: 如果不设置，默认为空字符串。
+
 ## 方法一：本地 Docker 部署
 
 你可以在本地使用 Docker 来构建和运行 SillyTavern。
@@ -224,6 +270,10 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
       -e PLUGINS='https://github.com/fuwei99/cloud-saves.git' \\
       -e EXTENSIONS='https://github.com/user1/extension1.git,https://github.com/user2/extension2.git' \\
       -e INSTALL_FOR_ALL_USERS=false \\
+      -e REPO_URL='https://github.com/yourusername/yourrepo' \\
+      -e GITHUB_TOKEN='ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' \\
+      -e AUTOSAVE_INTERVAL=30 \\
+      -e AUTOSAVE_TARGET_TAG=auto-backup \\
       sillytavern-local
 
     # 如果你需要安装更多插件，用逗号隔开添加到 PLUGINS 变量中
@@ -233,6 +283,10 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
     #   -e PLUGINS='https://github.com/fuwei99/cloud-saves.git,https://github.com/user/other-plugin.git' \
     #   -e EXTENSIONS='https://github.com/user1/extension1.git,https://github.com/user2/extension2.git' \
     #   -e INSTALL_FOR_ALL_USERS=false \
+    #   -e REPO_URL='https://github.com/yourusername/yourrepo' \
+    #   -e GITHUB_TOKEN='ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' \
+    #   -e AUTOSAVE_INTERVAL=30 \
+    #   -e AUTOSAVE_TARGET_TAG=auto-backup \
     #   sillytavern-local
     ```
     *   `-p 8000:8000`: 将容器的 8000 端口映射到宿主机的 8000 端口。
@@ -241,6 +295,10 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
     *   `-e PLUGINS='...'`: 传递插件列表，这里以安装 `cloud-saves` 为例。
     *   `-e EXTENSIONS='...'`: 传递扩展列表，这里以安装 `extension1` 和 `extension2` 为例。
     *   `-e INSTALL_FOR_ALL_USERS=false`: 设置扩展安装模式为用户级安装。
+    *   `-e REPO_URL='...'`: 传递 REPO_URL 环境变量。
+    *   `-e GITHUB_TOKEN='...'`: 传递 GITHUB_TOKEN 环境变量。
+    *   `-e AUTOSAVE_INTERVAL=30`: 设置 AUTOSAVE_INTERVAL 环境变量。
+    *   `-e AUTOSAVE_TARGET_TAG=auto-backup`: 设置 AUTOSAVE_TARGET_TAG 环境变量。
 
 4.  **访问**: 打开浏览器访问 `http://localhost:8000`。
 
@@ -278,6 +336,30 @@ CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由
         *   值 (Value) 输入: `true`（系统级安装，所有用户可用）或 `false`（用户级安装，仅默认用户可用）。
         *   **推荐**: 对于 Hugging Face Space 单用户环境，建议设置为 `false` 或不设置此 Secret。
         *   点击 "Add secret"。如果不设置，默认为用户级安装。
+
+    *   **(可选) 添加 `REPO_URL` Secret**:
+        *   再次点击 "New secret"。
+        *   名称 (Name) 输入: `REPO_URL`
+        *   值 (Value) 输入: 你的 GitHub 仓库地址，用于 cloud-saves 插件自动配置。例如：`https://github.com/yourusername/yourrepo`
+        *   点击 "Add secret"。
+
+    *   **(可选) 添加 `GITHUB_TOKEN` Secret**:
+        *   再次点击 "New secret"。
+        *   名称 (Name) 输入: `GITHUB_TOKEN`
+        *   值 (Value) 输入: 你的 GitHub 访问令牌，用于 cloud-saves 插件自动配置。例如：`ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+        *   点击 "Add secret"。
+
+    *   **(可选) 添加 `AUTOSAVE_INTERVAL` Secret**:
+        *   再次点击 "New secret"。
+        *   名称 (Name) 输入: `AUTOSAVE_INTERVAL`
+        *   值 (Value) 输入: 自动保存间隔秒数，不填写默认为30秒
+        *   点击 "Add secret"。
+
+    *   **(可选) 添加 `AUTOSAVE_TARGET_TAG` Secret**:
+        *   再次点击 "New secret"。
+        *   名称 (Name) 输入: `AUTOSAVE_TARGET_TAG`
+        *   值 (Value) 输入: 自动保存目标标签，不填写默认为空
+        *   点击 "Add secret"。
 
 4.  **构建与启动**: Hugging Face 会自动检测到 `Dockerfile` 和 Secrets，并开始构建镜像、启动容器。你可以在 Space 的 **Logs** 标签页查看构建和启动过程。
 
