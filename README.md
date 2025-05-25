@@ -48,8 +48,8 @@ PLUGINS：https://github.com/fuwei99/cloud-saves.git
 
 CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由于hugging face的duplicate(部署)界面有bug，复制下来的也会变成一行，所以只能进入界面之后，在setting下面找到secrets，点击CONFIG_YAML旁边的replace，重新复制粘贴一遍到value那里，这样应该就可以了。
 
-EXTENSIONS：https://github.com/N0VI028/JS-Slash-Runner,https://github.com/user2/extension2.git
-（填写扩展链接，比如云酒馆，用英语逗号隔开）
+EXTENSIONS：https://github.com/N0VI028/JS-Slash-Runner,https://gitee.com/muyoou/st-memory-enhancement
+（填写扩展链接，比如酒馆助手，增强记忆插件，用英语逗号隔开）
 
 INSTALL_FOR_ALL_USERS：true
 （设置为false会安装到default-user，设置为true会安装到全局，不填写默认安装到default-user，推荐设置为true）
