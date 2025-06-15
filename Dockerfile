@@ -76,28 +76,26 @@ RUN git config --global --add safe.directory "${APP_HOME}"
 # Ensure the node user owns the application directory and its contents
 RUN chown -R node:node ${APP_HOME}
 
-# Download the health check script from GitHub and place it in the app directory
-RUN git clone --depth 1 https://github.com/fuwei99/docker-health.sh.git /tmp/health_repo && \
-    cp /tmp/health_repo/health.sh ${APP_HOME}/health.sh && \
-    rm -rf /tmp/health_repo
+# No longer download external health.sh
+# RUN git clone --depth 1 https://github.com/fuwei99/docker-health.sh.git /tmp/health_repo && \
+#    cp /tmp/health_repo/health.sh ${APP_HOME}/health.sh && \
+#    rm -rf /tmp/health_repo
 
 # Make the downloaded script executable
-RUN chmod +x ${APP_HOME}/health.sh
+# RUN chmod +x ${APP_HOME}/health.sh
 
-# Create a new entrypoint script to handle config.yaml generation
+# Create a new, self-contained entrypoint script
 RUN <<EOF > /usr/local/bin/entrypoint.sh
 #!/bin/sh
 set -e
 
-# Check if both USERNAME and PASSWORD are provided
-if [ -n "\${username}" ] && [ -n "\${password}" ]; then
-  echo "--- Basic auth enabled: Creating config.yaml with provided credentials. Ignoring CONFIG_YAML. ---"
-  
-  # Create config directory if it doesn't exist
-  mkdir -p ${APP_HOME}/config
+CONFIG_FILE="${APP_HOME}/config.yaml"
 
-  # Create config.yaml from heredoc, substituting env vars
-  cat <<EOT > ${APP_HOME}/config.yaml
+# Priority 1: Use username/password if both are provided
+if [ -n "\${username}" ] && [ -n "\${password}" ]; then
+  echo "--- Basic auth enabled: Creating config.yaml with provided credentials. ---"
+  
+  cat <<EOT > \${CONFIG_FILE}
 dataRoot: ./data
 listen: true
 listenAddress:
@@ -199,12 +197,47 @@ enableServerPlugins: true
 enableServerPluginsAutoUpdate: false
 EOT
 
+# Priority 2: Use CONFIG_YAML if provided (and username/password are not)
+elif [ -n "\${CONFIG_YAML}" ]; then
+  echo "--- Found CONFIG_YAML, creating config.yaml from environment variable. ---"
+  echo "\${CONFIG_YAML}" | base64 -d > \${CONFIG_FILE}
+
+# Priority 3: No config provided, let the app use its defaults
 else
-  echo "--- Basic auth credentials not provided. Falling back to default logic (using CONFIG_YAML if provided). ---"
+    echo "--- No user/pass or CONFIG_YAML provided. App will use its default settings. ---"
 fi
 
-# Execute the original health check and startup script
-exec /home/node/app/health.sh
+echo "*** Starting SillyTavern... ***"
+node ${APP_HOME}/server.js &
+SERVER_PID=\$!
+
+echo "SillyTavern server started with PID \${SERVER_PID}. Waiting for it to become responsive..."
+
+# Health check and keep-alive loop
+RETRY_COUNT=0
+MAX_RETRIES=12 # Wait for 60 seconds max
+while ! curl -sf http://localhost:8000/ > /dev/null; do
+    RETRY_COUNT=\$((RETRY_COUNT+1))
+    if [ \${RETRY_COUNT} -ge \${MAX_RETRIES} ]; then
+        echo "SillyTavern failed to start. Exiting."
+        kill \${SERVER_PID}
+        exit 1
+    fi
+    echo "SillyTavern is still starting or not responsive on port 8000, waiting 5 seconds..."
+    sleep 5
+done
+
+echo "SillyTavern started successfully! Beginning periodic keep-alive..."
+
+# Keep-alive loop
+while kill -0 \${SERVER_PID} 2>/dev/null; do
+    echo "Sending keep-alive request to http://localhost:8000/"
+    curl -sf http://localhost:8000/ > /dev/null || echo "Keep-alive request failed."
+    echo "Keep-alive request sent. Sleeping for 30 minutes."
+    sleep 1800
+done &
+
+wait \${SERVER_PID}
 EOF
 
 # Make the new entrypoint executable
@@ -212,5 +245,5 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 8000
 
-# Entrypoint: Execute the health check and startup script
+# Entrypoint: Execute the self-contained startup script
 ENTRYPOINT ["tini", "--", "/usr/local/bin/entrypoint.sh"]
