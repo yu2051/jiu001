@@ -240,9 +240,8 @@ done &
 wait \${SERVER_PID}
 EOF
 
-# Make the new entrypoint executable and fix line endings
-RUN sed -i 's/\r$//g' /usr/local/bin/entrypoint.sh && \
-    chmod +x /usr/local/bin/entrypoint.sh
+# Make the new entrypoint executable and fix potential CRLF issues
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 8000
 
