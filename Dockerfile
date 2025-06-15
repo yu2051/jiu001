@@ -19,6 +19,7 @@ WORKDIR ${APP_HOME}
 
 # Set NODE_ENV to production and set credentials from ARGs
 ENV NODE_ENV=production
+ENV APP_HOME=${APP_HOME}
 ENV USERNAME=${USERNAME}
 ENV PASSWORD=${PASSWORD}
 
