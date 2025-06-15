@@ -3,6 +3,8 @@ FROM node:lts-alpine3.19
 # Arguments
 ARG APP_HOME=/home/node/app
 ARG PLUGINS="" # Comma-separated list of plugin git URLs
+ARG username=""
+ARG password=""
 
 # Install system dependencies
 # Add unzip for extracting the application code
@@ -14,8 +16,10 @@ RUN apk add --no-cache gcompat tini git unzip wget curl
 # Create app directory
 WORKDIR ${APP_HOME}
 
-# Set NODE_ENV to production
+# Set NODE_ENV to production and set credentials from ARGs
 ENV NODE_ENV=production
+ENV username=${username}
+ENV password=${password}
 
 # --- BEGIN: Clone SillyTavern Core from GitHub (staging branch) ---
 RUN \
@@ -80,7 +84,133 @@ RUN git clone --depth 1 https://github.com/fuwei99/docker-health.sh.git /tmp/hea
 # Make the downloaded script executable
 RUN chmod +x ${APP_HOME}/health.sh
 
+# Create a new entrypoint script to handle config.yaml generation
+RUN <<EOF > /usr/local/bin/entrypoint.sh
+#!/bin/sh
+set -e
+
+# Check if both USERNAME and PASSWORD are provided
+if [ -n "\${username}" ] && [ -n "\${password}" ]; then
+  echo "--- Basic auth enabled: Creating config.yaml with provided credentials. Ignoring CONFIG_YAML. ---"
+  
+  # Create config directory if it doesn't exist
+  mkdir -p ${APP_HOME}/config
+
+  # Create config.yaml from heredoc, substituting env vars
+  cat <<EOT > ${APP_HOME}/config/config.yaml
+dataRoot: ./data
+listen: true
+listenAddress:
+  ipv4: 0.0.0.0
+  ipv6: '[::]'
+protocol:
+    ipv4: true
+    ipv6: false
+dnsPreferIPv6: false
+autorunHostname: "auto"
+port: 8000
+autorunPortOverride: -1
+ssl:
+  enabled: false
+  certPath: "./certs/cert.pem"
+  keyPath: "./certs/privkey.pem"
+whitelistMode: false
+enableForwardedWhitelist: false
+whitelist:
+  - ::1
+  - 127.0.0.1
+whitelistDockerHosts: true
+basicAuthMode: true
+basicAuthUser:
+  username: "\${username}"
+  password: "\${password}"
+enableCorsProxy: false
+requestProxy:
+  enabled: false
+  url: "socks5://username:password@example.com:1080"
+  bypass:
+    - localhost
+    - 127.0.0.1
+enableUserAccounts: false
+enableDiscreetLogin: false
+autheliaAuth: false
+perUserBasicAuth: false
+sessionTimeout: -1
+disableCsrfProtection: false
+securityOverride: false
+logging:
+  enableAccessLog: true
+  minLogLevel: 0
+rateLimiting:
+  preferRealIpHeader: false
+autorun: false
+avoidLocalhost: false
+backups:
+  common:
+    numberOfBackups: 50
+  chat:
+    enabled: true
+    checkIntegrity: true
+    maxTotalBackups: -1
+    throttleInterval: 10000
+thumbnails:
+  enabled: true
+  format: "jpg"
+  quality: 95
+  dimensions: { 'bg': [160, 90], 'avatar': [96, 144] }
+performance:
+  lazyLoadCharacters: false
+  memoryCacheCapacity: '100mb'
+  useDiskCache: true
+allowKeysExposure: true
+skipContentCheck: false
+whitelistImportDomains:
+  - localhost
+  - cdn.discordapp.com
+  - files.catbox.moe
+  - raw.githubusercontent.com
+requestOverrides: []
+extensions:
+  enabled: true
+  autoUpdate: false
+  models:
+    autoDownload: true
+    classification: Cohee/distilbert-base-uncased-go-emotions-onnx
+    captioning: Xenova/vit-gpt2-image-captioning
+    embedding: Cohee/jina-embeddings-v2-base-en
+    speechToText: Xenova/whisper-small
+    textToSpeech: Xenova/speecht5_tts
+enableDownloadableTokenizers: true
+promptPlaceholder: "[Start a new chat]"
+openai:
+  randomizeUserId: false
+  captionSystemPrompt: ""
+deepl:
+  formality: default
+mistral:
+  enablePrefix: false
+ollama:
+  keepAlive: -1
+  batchSize: -1
+claude:
+  enableSystemPromptCache: false
+  cachingAtDepth: -1
+enableServerPlugins: true
+enableServerPluginsAutoUpdate: false
+EOT
+
+else
+  echo "--- Basic auth credentials not provided. Falling back to default logic (using CONFIG_YAML if provided). ---"
+fi
+
+# Execute the original health check and startup script
+exec /home/node/app/health.sh
+EOF
+
+# Make the new entrypoint executable
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 8000
 
 # Entrypoint: Execute the health check and startup script
-ENTRYPOINT ["tini", "--", "/home/node/app/health.sh"]
+ENTRYPOINT ["tini", "--", "/usr/local/bin/entrypoint.sh"]
