@@ -11,7 +11,8 @@ ARG PASSWORD=""
 # Keep git for potential use by scripts or future plugin updates
 # Add wget to download the zip file
 # Add curl for health checks and keep-alive
-RUN apk add --no-cache gcompat tini git unzip wget curl
+# Add dos2unix to fix CRLF issues
+RUN apk add --no-cache gcompat tini git unzip wget curl dos2unix
 
 # Create app directory
 WORKDIR ${APP_HOME}
@@ -241,7 +242,7 @@ wait \${SERVER_PID}
 EOF
 
 # Make the new entrypoint executable and fix potential CRLF issues
-RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
+RUN dos2unix /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 8000
 
