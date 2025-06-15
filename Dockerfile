@@ -97,7 +97,7 @@ if [ -n "\${username}" ] && [ -n "\${password}" ]; then
   mkdir -p ${APP_HOME}/config
 
   # Create config.yaml from heredoc, substituting env vars
-  cat <<EOT > ${APP_HOME}/config/config.yaml
+  cat <<EOT > ${APP_HOME}/config.yaml
 dataRoot: ./data
 listen: true
 listenAddress:
