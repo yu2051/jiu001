@@ -125,10 +125,22 @@ SERVER_PID=$!
 
 echo "SillyTavern server started with PID ${SERVER_PID}. Waiting for it to become responsive..."
 
-# Health check and keep-alive loop
+# --- Health Check Logic ---
+HEALTH_CHECK_URL="http://localhost:8000/"
+CURL_COMMAND="curl -sf"
+
+# If basic auth is enabled, provide credentials to curl for health checks
+if [ -n "${USERNAME}" ] && [ -n "${PASSWORD}" ]; then
+    echo "--- Health check will use basic auth credentials. ---"
+    # The -u flag provides user:password for basic auth
+    CURL_COMMAND="curl -sf -u \"${USERNAME}:${PASSWORD}\""
+fi
+
+# Health check loop
 RETRY_COUNT=0
 MAX_RETRIES=12 # Wait for 60 seconds max
-while ! curl -sf http://localhost:8000/ > /dev/null; do
+# Use eval to correctly execute the command string with quotes
+while ! eval "${CURL_COMMAND} ${HEALTH_CHECK_URL}" > /dev/null; do
     RETRY_COUNT=$((RETRY_COUNT+1))
     if [ ${RETRY_COUNT} -ge ${MAX_RETRIES} ]; then
         echo "SillyTavern failed to start. Exiting."
@@ -143,8 +155,9 @@ echo "SillyTavern started successfully! Beginning periodic keep-alive..."
 
 # Keep-alive loop
 while kill -0 ${SERVER_PID} 2>/dev/null; do
-    echo "Sending keep-alive request to http://localhost:8000/"
-    curl -sf http://localhost:8000/ > /dev/null || echo "Keep-alive request failed."
+    echo "Sending keep-alive request to ${HEALTH_CHECK_URL}"
+    # Use eval here as well for the keep-alive command
+    eval "${CURL_COMMAND} ${HEALTH_CHECK_URL}" > /dev/null || echo "Keep-alive request failed."
     echo "Keep-alive request sent. Sleeping for 30 minutes."
     sleep 1800
 done &
