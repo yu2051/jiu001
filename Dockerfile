@@ -3,8 +3,8 @@ FROM node:lts-alpine3.19
 # Arguments
 ARG APP_HOME=/home/node/app
 ARG PLUGINS="" # Comma-separated list of plugin git URLs
-ARG username=""
-ARG password=""
+ARG USERNAME=""
+ARG PASSWORD=""
 
 # Install system dependencies
 # Add unzip for extracting the application code
@@ -18,8 +18,8 @@ WORKDIR ${APP_HOME}
 
 # Set NODE_ENV to production and set credentials from ARGs
 ENV NODE_ENV=production
-ENV username=${username}
-ENV password=${password}
+ENV USERNAME=${USERNAME}
+ENV PASSWORD=${PASSWORD}
 
 # --- BEGIN: Clone SillyTavern Core from GitHub (staging branch) ---
 RUN \
@@ -91,8 +91,8 @@ set -e
 
 CONFIG_FILE="${APP_HOME}/config.yaml"
 
-# Priority 1: Use username/password if both are provided
-if [ -n "\${username}" ] && [ -n "\${password}" ]; then
+# Priority 1: Use USERNAME/PASSWORD if both are provided
+if [ -n "\${USERNAME}" ] && [ -n "\${PASSWORD}" ]; then
   echo "--- Basic auth enabled: Creating config.yaml with provided credentials. ---"
   
   cat <<EOT > \${CONFIG_FILE}
@@ -120,8 +120,8 @@ whitelist:
 whitelistDockerHosts: true
 basicAuthMode: true
 basicAuthUser:
-  username: "\${username}"
-  password: "\${password}"
+  username: "\${USERNAME}"
+  password: "\${PASSWORD}"
 enableCorsProxy: false
 requestProxy:
   enabled: false
