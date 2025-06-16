@@ -62,7 +62,7 @@ REPO_URL：https://github.com/yourusername/yourrepo（填写你的 GitHub 仓库
 
 GITHUB_TOKEN：ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx（填写你的 GitHub 访问令牌，用于 cloud-saves 插件自动配置）
 
-AUTOSAVE_INTERVAL：30（填写自动保存间隔秒数，不填写默认为30秒）
+AUTOSAVE_INTERVAL：30（填写自动保存间隔分钟，不填写默认为30分）
 
 AUTOSAVE_TARGET_TAG：auto-backup（填写自动保存目标标签，不填写默认为空）
 
