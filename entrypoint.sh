@@ -119,6 +119,108 @@ else
     echo "--- No user/pass or CONFIG_YAML provided. App will use its default settings. ---"
 fi
 
+# --- BEGIN: Update SillyTavern Core at Runtime ---
+echo '--- Attempting to update SillyTavern Core from GitHub (staging branch) ---'
+if [ -d ".git" ] && [ "$(git rev-parse --abbrev-ref HEAD)" = "staging" ]; then
+  echo 'Existing staging branch found. Resetting and pulling latest changes...'
+  git reset --hard HEAD && \
+  git pull origin staging || echo 'WARN: git pull failed, continuing with code from build time.'
+  echo '--- SillyTavern Core update check finished. ---'
+else
+  echo 'WARN: .git directory not found or not on staging branch. Skipping runtime update. Code from build time will be used.'
+fi
+# --- END: Update SillyTavern Core at Runtime ---
+
+# --- BEGIN: Configure Git default identity at Runtime ---
+echo '--- Configuring Git default user identity at runtime ---'
+git config --global user.name "SillyTavern Sync" && \
+git config --global user.email "sillytavern-sync@example.com"
+echo '--- Git identity configured for runtime user. ---'
+# --- END: Configure Git default identity at Runtime ---
+
+# --- BEGIN: Dynamically Install Plugins at Runtime ---
+echo '--- Checking for PLUGINS environment variable ---'
+if [ -n "$PLUGINS" ]; then
+  echo "*** Installing Plugins specified in PLUGINS environment variable: $PLUGINS ***"
+  # Ensure plugins directory exists
+  mkdir -p ./plugins && chown node:node ./plugins
+  # Set comma as delimiter
+  IFS=','
+  # Loop through each plugin URL
+  for plugin_url in $PLUGINS; do
+    # Trim leading/trailing whitespace
+    plugin_url=$(echo "$plugin_url" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    if [ -z "$plugin_url" ]; then continue; fi
+    # Extract plugin name
+    plugin_name_git=$(basename "$plugin_url")
+    plugin_name=${plugin_name_git%.git}
+    plugin_dir="./plugins/$plugin_name"
+    echo "--- Installing plugin: $plugin_name from $plugin_url into $plugin_dir ---"
+    # Remove existing dir if it exists
+    rm -rf "$plugin_dir"
+    # Clone the plugin (run as root, fix perms later)
+    git clone --depth 1 "$plugin_url" "$plugin_dir"
+    if [ -f "$plugin_dir/package.json" ]; then
+      echo "--- Installing dependencies for $plugin_name ---"
+      (cd "$plugin_dir" && npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev --force && npm cache clean --force) || echo "WARN: Failed to install dependencies for $plugin_name"
+    else
+       echo "--- No package.json found for $plugin_name, skipping dependency install. ---"
+    fi || echo "WARN: Failed to clone $plugin_name from $plugin_url, skipping..."
+    
+    # Configure cloud-saves plugin if this is the cloud-saves plugin
+    if [ "$plugin_name" = "cloud-saves" ]; then
+      echo "--- Detected cloud-saves plugin, checking for configuration environment variables ---"
+      
+      # Set default values
+      REPO_URL_VALUE=${REPO_URL:-"https://github.com/fuwei99/sillytravern"}
+      GITHUB_TOKEN_VALUE=${GITHUB_TOKEN:-""}
+      AUTOSAVE_INTERVAL_VALUE=${AUTOSAVE_INTERVAL:-30}
+      AUTOSAVE_TARGET_TAG_VALUE=${AUTOSAVE_TARGET_TAG:-""}
+      
+      # Determine if autosave should be enabled
+      AUTOSAVE_ENABLED="false"
+      if [ -n "$REPO_URL" ] && [ -n "$GITHUB_TOKEN" ]; then
+        AUTOSAVE_ENABLED="true"
+      fi
+      
+      echo "--- Creating cloud-saves plugin configuration file ---"
+      CONFIG_JSON_FILE="$plugin_dir/config.json"
+      
+      # Generate config.json file
+      cat <<EOT > ${CONFIG_JSON_FILE}
+{
+  "repo_url": "${REPO_URL_VALUE}",
+  "branch": "main",
+  "username": "cloud-saves",
+  "github_token": "${GITHUB_TOKEN_VALUE}",
+  "display_name": "",
+  "is_authorized": true,
+  "last_save": null,
+  "current_save": null,
+  "has_temp_stash": false,
+  "autoSaveEnabled": ${AUTOSAVE_ENABLED},
+  "autoSaveInterval": ${AUTOSAVE_INTERVAL_VALUE},
+  "autoSaveTargetTag": "${AUTOSAVE_TARGET_TAG_VALUE}"
+}
+EOT
+      
+      # Set correct permissions for config file
+      chown node:node ${CONFIG_JSON_FILE}
+      
+      echo "--- cloud-saves plugin configuration file created at: ${CONFIG_JSON_FILE} ---"
+    fi
+  done
+  # Reset IFS
+  unset IFS
+  # Fix permissions for plugins directory after installation
+  echo "--- Setting permissions for plugins directory ---"
+  chown -R node:node ./plugins
+  echo "*** Plugin installation finished. ***"
+else
+  echo 'PLUGINS environment variable is not set or empty, skipping runtime plugin installation.'
+fi
+# --- END: Dynamically Install Plugins at Runtime ---
+
 echo "*** Starting SillyTavern... ***"
 node ${APP_HOME}/server.js &
 SERVER_PID=$!
@@ -152,6 +254,77 @@ while ! eval "${CURL_COMMAND} ${HEALTH_CHECK_URL}" > /dev/null; do
 done
 
 echo "SillyTavern started successfully! Beginning periodic keep-alive..."
+
+# --- BEGIN: Install Extensions after SillyTavern startup ---
+install_extensions() {
+    echo "--- Waiting 40 seconds before installing extensions... ---"
+    sleep 40
+    
+    echo "--- Checking for EXTENSIONS environment variable ---"
+    if [ -n "$EXTENSIONS" ]; then
+        echo "*** Installing Extensions specified in EXTENSIONS environment variable: $EXTENSIONS ***"
+        
+        # Determine installation directory based on INSTALL_FOR_ALL_USERS
+        if [ "$INSTALL_FOR_ALL_USERS" = "true" ]; then
+            # System-level installation (for all users)
+            EXTENSIONS_DIR="./public/scripts/extensions/third-party"
+            echo "Installing extensions for all users in: $EXTENSIONS_DIR"
+        else
+            # User-level installation (for default user only)
+            EXTENSIONS_DIR="./data/default-user/extensions"
+            echo "Installing extensions for default user in: $EXTENSIONS_DIR"
+        fi
+        
+        # Ensure extensions directory exists
+        mkdir -p "$EXTENSIONS_DIR" && chown node:node "$EXTENSIONS_DIR"
+        
+        # Set comma as delimiter
+        IFS=','
+        
+        # Loop through each extension URL
+        for extension_url in $EXTENSIONS; do
+            # Trim leading/trailing whitespace
+            extension_url=$(echo "$extension_url" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            if [ -z "$extension_url" ]; then continue; fi
+            
+            # Extract extension name
+            extension_name_git=$(basename "$extension_url")
+            extension_name=${extension_name_git%.git}
+            extension_dir="$EXTENSIONS_DIR/$extension_name"
+            
+            echo "--- Installing extension: $extension_name from $extension_url into $extension_dir ---"
+            
+            # Remove existing dir if it exists
+            rm -rf "$extension_dir"
+            
+            # Clone the extension
+            git clone --depth 1 "$extension_url" "$extension_dir"
+            
+            # Check if extension has package.json and install dependencies if needed
+            if [ -f "$extension_dir/package.json" ]; then
+                echo "--- Installing dependencies for $extension_name ---"
+                (cd "$extension_dir" && npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev --force && npm cache clean --force) || echo "WARN: Failed to install dependencies for $extension_name"
+            else
+                echo "--- No package.json found for $extension_name, skipping dependency install. ---"
+            fi || echo "WARN: Failed to clone $extension_name from $extension_url, skipping..."
+        done
+        
+        # Reset IFS
+        unset IFS
+        
+        # Fix permissions for extensions directory after installation
+        echo "--- Setting permissions for extensions directory ---"
+        chown -R node:node "$EXTENSIONS_DIR"
+        
+        echo "*** Extensions installation finished. ***"
+    else
+        echo 'EXTENSIONS environment variable is not set or empty, skipping extensions installation.'
+    fi
+}
+
+# Run the extension installation in the background
+install_extensions &
+# --- END: Install Extensions after SillyTavern startup ---
 
 # Keep-alive loop
 while kill -0 ${SERVER_PID} 2>/dev/null; do
