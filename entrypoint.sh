@@ -177,11 +177,8 @@ if [ -n "$PLUGINS" ]; then
       AUTOSAVE_INTERVAL_VALUE=${AUTOSAVE_INTERVAL:-30}
       AUTOSAVE_TARGET_TAG_VALUE=${AUTOSAVE_TARGET_TAG:-""}
       
-      # Determine if autosave should be enabled
+      # Always set autosave to false as required
       AUTOSAVE_ENABLED="false"
-      if [ -n "$REPO_URL" ] && [ -n "$GITHUB_TOKEN" ]; then
-        AUTOSAVE_ENABLED="true"
-      fi
       
       echo "--- Creating cloud-saves plugin configuration file ---"
       CONFIG_JSON_FILE="$plugin_dir/config.json"
