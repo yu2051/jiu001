@@ -134,7 +134,8 @@ fi
 # --- BEGIN: Configure Git default identity at Runtime ---
 echo '--- Configuring Git default user identity at runtime ---'
 git config --global user.name "SillyTavern Sync" && \
-git config --global user.email "sillytavern-sync@example.com"
+git config --global user.email "sillytavern-sync@example.com" && \
+git config --global --add safe.directory "${APP_HOME}/data"
 echo '--- Git identity configured for runtime user. ---'
 # --- END: Configure Git default identity at Runtime ---
 
