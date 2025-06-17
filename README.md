@@ -43,8 +43,11 @@ secrets:
 
 点击按钮后，按照下面的格式配置环境变量即可：
 
-PLUGINS：https://github.com/fuwei99/cloud-saves.git
-（填写云备份插件链接）
+PLUGINS：https://github.com/fuwei99/cloud-saves.git（填写云备份插件链接）
+
+USERAME|PASSWORD和CONFIG_YAML二选一：
+
+USERNAME/PASSWORD（推荐）: 填写用户名和密码就行，用于酒馆的登录
 
 CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由于hugging face的duplicate(部署)界面有bug，复制下来的也会变成一行，所以只能进入界面之后，在setting下面找到secrets，点击CONFIG_YAML旁边的replace，重新复制粘贴一遍到value那里，这样应该就可以了。
 
@@ -64,7 +67,7 @@ GITHUB_TOKEN：ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx（填写你的 GitHu
 
 AUTOSAVE_INTERVAL：30（填写自动保存间隔分钟，不填写默认为30分）
 
-AUTOSAVE_TARGET_TAG：auto-backup（填写自动保存目标标签，不填写默认为空）
+AUTOSAVE_TARGET_TAG：save_xxxxxxxxxxxxxxxxxxxxx（填写自动保存目标标签，不填写默认为空）
 
 
 ## 如何读取或者保存存档

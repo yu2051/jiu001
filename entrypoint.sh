@@ -112,7 +112,7 @@ EOT
 # Priority 2: Use CONFIG_YAML if provided (and username/password are not)
 elif [ -n "${CONFIG_YAML}" ]; then
   echo "--- Found CONFIG_YAML, creating config.yaml from environment variable. ---"
-  echo "${CONFIG_YAML}" | base64 -d > ${CONFIG_FILE}
+  printf '%s\n' "${CONFIG_YAML}" > ${CONFIG_FILE}
 
 # Priority 3: No config provided, let the app use its defaults
 else
