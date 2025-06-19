@@ -5,70 +5,61 @@ colorFrom: pink
 colorTo: blue
 sdk: docker
 pinned: false
-app_port: 8000 # SillyTavern 默认端口
-# 定义所需的 Hugging Face Secrets
-secrets:
-  - name: CONFIG_YAML
-    description: "你的 config.yaml 文件内容（无注释）"
-    required: true # 配置是必需的
-  - name: PLUGINS
-    description: "要安装的插件Git URL列表（逗号分隔）"
-    required: false # 插件是可选的
-  - name: EXTENSIONS
-    description: "要安装的扩展Git URL列表（逗号分隔）"
-    required: false # 扩展是可选的
-  - name: INSTALL_FOR_ALL_USERS
-    description: "扩展安装模式：true为系统级安装，false或其他值为用户级安装"
-    required: false # 扩展安装模式是可选的
-  - name: REPO_URL
-    description: "cloud-saves插件的GitHub仓库URL（用于自动配置）"
-    required: false # cloud-saves自动配置是可选的
-  - name: GITHUB_TOKEN
-    description: "GitHub访问令牌（用于cloud-saves插件自动配置）"
-    required: false # cloud-saves自动配置是可选的
-  - name: AUTOSAVE_INTERVAL
-    description: "cloud-saves插件自动保存间隔（秒）"
-    required: false # cloud-saves自动保存配置是可选的
-  - name: AUTOSAVE_TARGET_TAG
-    description: "cloud-saves插件自动保存目标标签"
-    required: false # cloud-saves自动保存配置是可选的
+app_port: 8000
 ---
 
 # 最简单的方法：一键部署
-## 注意部署界面那个visibility一定要改为public，不然没办法用
+
+> **⚠️ 重要提示：** 部署界面中的 **visibility** 一定要改为 **public**，否则无法正常使用！
 
 如果你不想手动配置，可以直接点击下方按钮，一键将 SillyTavern Docker 部署到你自己的 Hugging Face Space 中（需要先注册 Hugging Face 账号）：
 
 [![部署到 Hugging Face Spaces](https://huggingface.co/datasets/huggingface/badges/resolve/main/deploy-to-spaces-lg.svg)](https://huggingface.co/spaces/malt666/Tavern-Docker?duplicate=true)
 
-点击按钮后，按照下面的格式配置环境变量即可：
+## 环境变量配置指南
 
-PLUGINS：https://github.com/fuwei99/cloud-saves.git（填写云备份插件链接）
+点击部署按钮后，请按照下表配置环境变量：
 
-USERAME|PASSWORD和CONFIG_YAML二选一：
+### 基本配置（必填项）
 
-USERNAME/PASSWORD（推荐）: 填写用户名和密码就行，用于酒馆的登录
+| 环境变量 | 说明 | 示例值 |
+|---------|------|--------|
+| **PLUGINS** | 云备份插件链接 | `https://github.com/fuwei99/cloud-saves.git` |
+| **认证配置** | USERNAME/PASSWORD 和 CONFIG_YAML 二选一 | - |
 
-CONFIG_YAML：见下方命令行复制，记得改用户名和密码，另外由于hugging face的duplicate(部署)界面有bug，复制下来的也会变成一行，所以只能进入界面之后，在setting下面找到secrets，点击CONFIG_YAML旁边的replace，重新复制粘贴一遍到value那里，这样应该就可以了。
+#### 认证方式（二选一）：
 
-EXTENSIONS：https://github.com/N0VI028/JS-Slash-Runner,https://gitee.com/muyoou/st-memory-enhancement
-（填写扩展链接，比如酒馆助手，增强记忆插件，用英语逗号隔开）
+1. **USERNAME/PASSWORD**（推荐）
+   - 简单直接填写用户名和密码，用于酒馆的登录
 
-INSTALL_FOR_ALL_USERS：true
-（设置为false会安装到default-user，设置为true会安装到全局，不填写默认安装到default-user，推荐设置为true）
+2. **CONFIG_YAML**
+   - 见下方命令行格式
+   - 记得修改配置中的用户名和密码
+   - **注意**：由于 Hugging Face 的部署界面有 bug，复制的内容可能会变成一行
+   - **解决方法**：部署后进入 Settings → Secrets，点击 CONFIG_YAML 旁边的 replace，重新复制粘贴
+
+### 扩展配置
+
+| 环境变量 | 说明 | 示例值 |
+|---------|------|--------|
+| **EXTENSIONS** | 扩展链接列表，用英文逗号分隔 | `https://github.com/N0VI028/JS-Slash-Runner,https://gitee.com/muyoou/st-memory-enhancement` |
+| **INSTALL_FOR_ALL_USERS** | 扩展安装模式 | `true` 或 `false` |
+
+> **扩展安装模式INSTALL_FOR_ALL_USERS**：
+> - `true`：安装到全局（推荐）
+> - `false`：仅安装到 default-user
+> - 不填写：默认安装到 default-user
+
+### 可选配置（cloud-saves 插件相关，自动配置基本信息，注意自动保存还是要自己开启，这里只是配置好信息）
+
+| 环境变量 | 说明 | 默认值 |
+|---------|------|-------|
+| **REPO_URL** | GitHub 仓库地址 | - |
+| **GITHUB_TOKEN** | GitHub 访问令牌 | - |
+| **AUTOSAVE_INTERVAL** | 自动保存间隔（秒） | 30 |
+| **AUTOSAVE_TARGET_TAG** | 自动保存目标标签 | 空 |
 
 ---
-
-以下是可选secret：
-
-REPO_URL：https://github.com/yourusername/yourrepo（填写你的 GitHub 仓库地址，用于 cloud-saves 插件自动配置）
-
-GITHUB_TOKEN：ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx（填写你的 GitHub 访问令牌，用于 cloud-saves 插件自动配置）
-
-AUTOSAVE_INTERVAL：30（填写自动保存间隔分钟，不填写默认为30分）
-
-AUTOSAVE_TARGET_TAG：save_xxxxxxxxxxxxxxxxxxxxx（填写自动保存目标标签，不填写默认为空）
-
 
 ## 如何读取或者保存存档
 
