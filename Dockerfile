@@ -23,11 +23,11 @@ ENV APP_HOME=${APP_HOME}
 ENV USERNAME=${USERNAME}
 ENV PASSWORD=${PASSWORD}
 
-# --- BEGIN: Clone SillyTavern Core from GitHub (staging branch) ---
+# --- BEGIN: Clone SillyTavern Core from GitHub (release branch) ---
 RUN \
-  echo "*** Cloning SillyTavern Core from GitHub (staging branch) ***" && \
+  echo "*** Cloning SillyTavern Core from GitHub (release branch) ***" && \
   # Clone the specific branch into the current directory
-  git clone -b staging --depth 1 https://github.com/SillyTavern/SillyTavern.git . && \
+  git clone -b release --depth 1 https://github.com/SillyTavern/SillyTavern.git . && \
   echo "*** Cloning complete. ***"
 # --- END: Clone SillyTavern Core ---
 
