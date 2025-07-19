@@ -18,7 +18,7 @@ protocol:
     ipv6: false
 dnsPreferIPv6: false
 autorunHostname: "auto"
-port: 7860
+port: 8000
 autorunPortOverride: -1
 ssl:
   enabled: false
