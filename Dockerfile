@@ -92,7 +92,7 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 # Make the new entrypoint executable
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-EXPOSE 7860
+EXPOSE 8000
 
 # Entrypoint: Execute the self-contained startup script
 ENTRYPOINT ["tini", "--", "/usr/local/bin/entrypoint.sh"]
